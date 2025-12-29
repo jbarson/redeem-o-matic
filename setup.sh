@@ -1,6 +1,6 @@
 #!/bin/bash
 # Master setup script for Redeem-O-Matic
-# Run this inside the dev container after opening the project
+# Run this from the project root directory
 
 set -e
 

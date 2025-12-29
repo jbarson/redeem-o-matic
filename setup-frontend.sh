@@ -1,13 +1,14 @@
 #!/bin/bash
 # Setup script for React frontend
-# Run this inside the dev container
+# Run this from the project root directory
 
 set -e
 
 echo "🚀 Setting up React frontend..."
 
-# Navigate to project root
-cd /workspace
+# Get the script's directory and navigate to project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Create React frontend if it doesn't exist
 if [ ! -f "frontend/package.json" ]; then

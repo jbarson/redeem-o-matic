@@ -23,27 +23,36 @@ This application allows users to:
 - React Router for navigation
 
 **Development:**
-- Dev Container with Docker
-- VS Code recommended
+- asdf for Ruby version management
+- Local development environment
 
 ## Getting Started
 
 ### Prerequisites
 
-- Docker Desktop installed
-- VS Code with the "Dev Containers" extension
+- **Ruby 3.4.3** - Managed via [asdf](https://asdf-vm.com/) (see `.tool-versions`)
+- **Node.js** (v16 or higher) - Install via [asdf](https://asdf-vm.com/) or [nvm](https://github.com/nvm-sh/nvm)
+- **SQLite3** - Usually pre-installed on macOS/Linux
+- **Bundler** - Install with `gem install bundler`
 
 ### Setup Instructions
 
-#### 1. Open in Dev Container
+#### 1. Install Ruby
 
-1. Open this project folder in VS Code
-2. When prompted, click "Reopen in Container" (or use Command Palette: `Dev Containers: Reopen in Container`)
-3. Wait for the container to build (first time only, ~2-5 minutes)
+```bash
+# Install asdf (if not already installed)
+# Follow instructions at: https://asdf-vm.com/guide/getting-started.html
+
+# Install Ruby plugin
+asdf plugin add ruby
+
+# Install Ruby 3.4.3 (specified in .tool-versions)
+asdf install
+```
 
 #### 2. Run Setup Script
 
-Once inside the dev container, run:
+From the project root, run:
 
 ```bash
 ./setup.sh
@@ -76,9 +85,7 @@ Frontend will run on: http://localhost:3001
 
 ```
 redeem-o-matic/
-├── .devcontainer/          # Dev container configuration
-│   ├── Dockerfile          # Container image definition
-│   └── devcontainer.json   # VS Code container settings
+├── .tool-versions          # asdf version configuration
 ├── backend/                # Rails API application
 │   ├── app/
 │   │   ├── controllers/    # API controllers
@@ -194,34 +201,28 @@ When submitting:
 1. Remove `node_modules/` (already in .gitignore)
 2. Remove `backend/tmp/` and `backend/log/` directories
 3. Include this README.md
-4. The `.devcontainer/` configuration allows reviewers to run the project instantly
-
-## Dev Container Benefits
-
-This project uses a dev container which provides:
-- Consistent development environment across all machines
-- Pre-configured Ruby 3.4.3 and Rails 8.0.2
-- No need to install dependencies on host machine
-- Instant setup for reviewers
-- Isolated environment that won't conflict with other projects
+4. Ensure `.tool-versions` is included for Ruby version consistency
 
 ## Troubleshooting
 
-**Container won't build:**
-- Ensure Docker Desktop is running
-- Try rebuilding: Command Palette → "Dev Containers: Rebuild Container"
+**Wrong Ruby version:**
+- Ensure asdf is properly configured in your shell
+- Run `asdf current` to verify Ruby 3.4.3 is active
+- Try `asdf reshim ruby` if commands aren't found
 
 **Rails server won't start:**
-- Check if port 3000 is already in use
+- Check if port 3000 is already in use: `lsof -i :3000`
 - Ensure you ran migrations: `rails db:migrate`
+- Verify all gems are installed: `bundle install`
 
 **React app won't start:**
 - Ensure you're in the `frontend/` directory
 - Try removing `node_modules/` and running `npm install` again
+- Check if port 3001 is already in use: `lsof -i :3001`
 
-**Ports not accessible:**
-- Check VS Code port forwarding (Ports tab in bottom panel)
-- Ensure ports 3000 and 3001 are forwarded
+**Database issues:**
+- Reset the database: `cd backend && rails db:reset`
+- Check SQLite3 is installed: `sqlite3 --version`
 
 ## License
 
