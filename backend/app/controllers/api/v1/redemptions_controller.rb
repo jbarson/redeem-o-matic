@@ -1,33 +1,31 @@
 class Api::V1::RedemptionsController < ApplicationController
   # POST /api/v1/redemptions
   def create
-    user = User.find(params[:user_id])
-    reward = Reward.find(params[:reward_id])
-
-    # Validate reward is active
-    unless reward.active
-      return render json: { error: 'Reward is not available' }, status: :unprocessable_entity
-    end
-
-    # Check stock availability
-    if reward.stock_quantity && reward.stock_quantity <= 0
-      return render json: { error: 'Reward is out of stock' }, status: :unprocessable_entity
-    end
-
-    # Check user has sufficient points
-    if user.points_balance < reward.cost
-      return render json: {
-        error: 'Insufficient points',
-        required: reward.cost,
-        available: user.points_balance
-      }, status: :unprocessable_entity
-    end
-
-    # Execute redemption in a transaction
     redemption = nil
     new_balance = nil
 
+    # Execute redemption in a transaction with pessimistic locking
     ActiveRecord::Base.transaction do
+      # Lock records for update to prevent race conditions
+      # This acquires FOR UPDATE locks in the database
+      user = User.lock.find(params[:user_id])
+      reward = Reward.lock.find(params[:reward_id])
+
+      # Validate reward is active (inside transaction after lock)
+      unless reward.active
+        raise ActiveRecord::RecordInvalid.new(reward), 'Reward is not available'
+      end
+
+      # Check stock availability (inside transaction after lock)
+      if reward.stock_quantity && reward.stock_quantity <= 0
+        raise ActiveRecord::RecordInvalid.new(reward), 'Reward is out of stock'
+      end
+
+      # Check user has sufficient points (inside transaction after lock)
+      if user.points_balance < reward.cost
+        raise ActiveRecord::RecordInvalid.new(user), "Insufficient points. Required: #{reward.cost}, Available: #{user.points_balance}"
+      end
+
       # Create redemption
       redemption = Redemption.create!(
         user: user,

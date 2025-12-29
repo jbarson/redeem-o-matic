@@ -147,5 +147,96 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         expect(Redemption.count).to eq(0)
       end
     end
+
+    context "race condition prevention with pessimistic locking" do
+      it "prevents double redemption when user has exact points for one redemption" do
+        # User has exactly enough points for one redemption
+        user.update(points_balance: 500)
+        reward.update(cost: 500)
+
+        # Simulate concurrent requests using threads
+        results = []
+        threads = 2.times.map do
+          Thread.new do
+            begin
+              post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+              results << { status: response.status, body: JSON.parse(response.body) }
+            rescue => e
+              results << { error: e.message }
+            end
+          end
+        end
+
+        threads.each(&:join)
+
+        # Verify that only one redemption succeeded
+        user.reload
+        expect(user.points_balance).to eq(0) # Only one redemption should have occurred
+        expect(Redemption.count).to eq(1)
+
+        # One request should succeed, one should fail
+        success_count = results.count { |r| r[:status] == 201 }
+        failure_count = results.count { |r| r[:status] == 422 }
+        expect(success_count).to eq(1)
+        expect(failure_count).to eq(1)
+      end
+
+      it "prevents negative stock when multiple concurrent redemptions exceed stock" do
+        # Only 1 item in stock
+        reward.update(stock_quantity: 1)
+
+        # Simulate 3 concurrent requests
+        results = []
+        threads = 3.times.map do
+          Thread.new do
+            begin
+              post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+              results << { status: response.status, body: JSON.parse(response.body) }
+            rescue => e
+              results << { error: e.message }
+            end
+          end
+        end
+
+        threads.each(&:join)
+
+        # Verify stock never went negative
+        reward.reload
+        expect(reward.stock_quantity).to eq(0) # Exactly one redemption
+        expect(Redemption.count).to eq(1)
+
+        # Only one should succeed
+        success_count = results.count { |r| r[:status] == 201 }
+        expect(success_count).to eq(1)
+      end
+
+      it "maintains data consistency under concurrent load" do
+        # User with enough points for multiple redemptions
+        user.update(points_balance: 1500)
+        reward.update(cost: 500, stock_quantity: 2)
+
+        initial_balance = user.points_balance
+        initial_stock = reward.stock_quantity
+
+        # Simulate 2 concurrent redemptions that should both succeed
+        threads = 2.times.map do
+          Thread.new do
+            post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+          end
+        end
+
+        threads.each(&:join)
+
+        # Verify data consistency
+        user.reload
+        reward.reload
+
+        expect(Redemption.count).to eq(2)
+        expect(user.points_balance).to eq(initial_balance - (reward.cost * 2))
+        expect(reward.stock_quantity).to eq(initial_stock - 2)
+        expect(user.points_balance).to eq(500) # 1500 - 1000
+        expect(reward.stock_quantity).to eq(0) # 2 - 2
+      end
+    end
   end
 end
