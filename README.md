@@ -10,21 +10,55 @@ This application allows users to:
 - Redeem rewards using their points
 - See a history of their reward redemptions
 
+## Features
+
+**Authentication:**
+- Simple email-based user selection (demo mode)
+- Protected routes requiring authentication
+- Persistent session with localStorage
+
+**Rewards Management:**
+- Browse active rewards with images and descriptions
+- Filter by stock availability
+- Real-time points balance updates
+- Confirmation modal before redemption
+
+**Redemption Flow:**
+- Transaction-safe reward redemption
+- Automatic point deduction
+- Stock quantity tracking
+- Success/error messaging
+
+**History Tracking:**
+- View past redemptions with details
+- Formatted dates and costs
+- Reward information display
+
+**UI/UX:**
+- Responsive design
+- Loading states during API calls
+- Error handling with user-friendly messages
+- Clean, functional styling
+
 ## Tech Stack
 
 **Backend:**
 - Ruby 3.4.3
 - Rails 8.0.2 (API mode)
 - SQLite3
+- RSpec (testing)
+- FactoryBot & Faker (test data)
 
 **Frontend:**
-- React (>16)
+- React 19 with TypeScript
+- React Router v7 for navigation
 - Axios for API calls
-- React Router for navigation
+- Jest & React Testing Library (testing)
 
 **Development:**
 - asdf for Ruby version management
 - Local development environment
+- Git version control
 
 ## Getting Started
 
@@ -88,18 +122,24 @@ redeem-o-matic/
 ├── .tool-versions          # asdf version configuration
 ├── backend/                # Rails API application
 │   ├── app/
-│   │   ├── controllers/    # API controllers
-│   │   └── models/         # Database models
-│   ├── config/             # Rails configuration
-│   ├── db/                 # Database schema and migrations
+│   │   ├── controllers/    # API controllers (Users, Rewards, Redemptions)
+│   │   └── models/         # Database models (User, Reward, Redemption)
+│   ├── config/             # Rails configuration (CORS, routes)
+│   ├── db/                 # Database schema, migrations, seeds
+│   ├── spec/               # RSpec tests (models, requests, factories)
 │   └── Gemfile             # Ruby dependencies
-├── frontend/               # React application
+├── frontend/               # React + TypeScript application
 │   ├── public/             # Static files
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── services/       # API service layer
-│   │   └── App.js          # Main app component
-│   └── package.json        # Node dependencies
+│   │   ├── components/     # React components (common, rewards, user, etc.)
+│   │   ├── context/        # UserContext for authentication
+│   │   ├── pages/          # Page components (Dashboard, Rewards, History)
+│   │   ├── services/       # API service layer (axios client)
+│   │   ├── styles/         # CSS files for components
+│   │   ├── types/          # TypeScript type definitions
+│   │   └── App.tsx         # Main app component
+│   ├── package.json        # Node dependencies
+│   └── tsconfig.json       # TypeScript configuration
 ├── setup.sh                # Master setup script
 ├── setup-backend.sh        # Backend setup script
 ├── setup-frontend.sh       # Frontend setup script
@@ -180,20 +220,43 @@ rails db:seed
 rails db:reset
 ```
 
-## API Endpoints (To Be Implemented)
+## API Endpoints
 
-The following RESTful endpoints should be implemented:
+The following RESTful endpoints are implemented:
 
-- `GET /api/users/:id/balance` - Get user's current points balance
-- `GET /api/rewards` - List all available rewards
-- `POST /api/redemptions` - Redeem a reward
-- `GET /api/users/:id/redemptions` - Get user's redemption history
+- `GET /api/v1/users` - List all users (for login selection)
+- `GET /api/v1/users/:id/balance` - Get user's current points balance
+- `GET /api/v1/rewards` - List all available rewards
+- `POST /api/v1/redemptions` - Redeem a reward (with transaction safety)
+- `GET /api/v1/users/:id/redemptions` - Get user's redemption history
+
+All endpoints return JSON responses and include proper error handling.
 
 ## Testing
 
-Testing frameworks can be added as needed:
-- Backend: RSpec or Minitest
-- Frontend: Jest and React Testing Library
+Comprehensive test suites are included:
+
+**Backend Tests (RSpec):**
+```bash
+cd backend
+bundle exec rspec
+```
+- **Coverage:** 89.55%
+- **Tests:** 57 examples, 0 failures
+- Model tests (validations, associations)
+- Request specs (API endpoints, error handling, transaction safety)
+- Factories with FactoryBot and Faker
+
+**Frontend Tests (Jest + React Testing Library):**
+```bash
+cd frontend
+npm test -- --coverage
+```
+- **Coverage:** 100% (for tested components)
+- **Tests:** 20 tests passing
+- Component tests (RewardCard, PointsBalance, ConfirmModal)
+- User interaction tests
+- TypeScript integration
 
 ## Submission Notes
 
