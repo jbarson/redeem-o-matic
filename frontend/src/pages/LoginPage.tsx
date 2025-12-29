@@ -57,7 +57,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="login-page">
       <div className="login-container">
-        <h1>Welcome to Redeem-O-Matic</h1>
+        <h1>Redeem-O-Matic</h1>
         <p className="subtitle">Select a user to continue</p>
 
         <div className="users-list">

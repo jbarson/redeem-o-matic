@@ -42,7 +42,7 @@
 }
 
 .reward-summary .reward-category {
-  color: #667eea;
+  color: #2d6a4f;
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -110,10 +110,10 @@
 }
 
 .btn-confirm {
-  background: #667eea;
+  background: #2d6a4f;
   color: white;
 }
 
 .btn-confirm:hover {
-  background: #5568d3;
+  background: #40916c;
 }
