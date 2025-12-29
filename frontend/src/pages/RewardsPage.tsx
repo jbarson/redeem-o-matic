@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { rewardsApi, redemptionsApi } from '../services/api';
@@ -16,15 +16,17 @@ const RewardsPage: React.FC = () => {
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
     const controller = new AbortController();
 
     const fetchRewards = async () => {
       try {
         const fetchedRewards = await rewardsApi.getAll(controller.signal);
-        if (isMounted) {
+        if (isMountedRef.current) {
           setRewards(fetchedRewards);
         }
       } catch (err: unknown) {
@@ -35,13 +37,13 @@ const RewardsPage: React.FC = () => {
         if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
           return;
         }
-        if (isMounted) {
+        if (isMountedRef.current) {
           const errorMessage = getErrorMessage(err, 'Failed to load rewards. Please try again.');
           setError(errorMessage);
           logger.apiError('/rewards', err);
         }
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setLoading(false);
         }
       }
@@ -50,10 +52,32 @@ const RewardsPage: React.FC = () => {
     fetchRewards();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       controller.abort();
     };
   }, []);
+
+  // Cleanup timeout on unmount or when successMessage changes
+  useEffect(() => {
+    if (successMessage) {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      // Set new timeout
+      timeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setSuccessMessage(null);
+        }
+      }, 5000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [successMessage]);
 
   const handleRedeemClick = (reward: Reward) => {
     setSelectedReward(reward);
@@ -84,12 +108,9 @@ const RewardsPage: React.FC = () => {
 
       // Refresh rewards list to update stock
       const updatedRewards = await rewardsApi.getAll();
-      if (isMounted) {
+      if (isMountedRef.current) {
         setRewards(updatedRewards);
       }
-
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err, 'Failed to redeem reward. Please try again.');
       setError(errorMessage);
