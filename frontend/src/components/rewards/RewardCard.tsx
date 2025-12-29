@@ -13,9 +13,7 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, userBalance, onRedeem }
   const isOutOfStock = reward.stock_quantity !== null && reward.stock_quantity !== undefined && reward.stock_quantity <= 0;
   const isDisabled = !canAfford || isOutOfStock;
 
-  // Use reward ID to get different kitten images for each reward
-  const imageVariation = (reward.id % 10) + 1;
-  const placeholderImage = `https://placekitten.com/${300 + imageVariation}/${200 + imageVariation}`;
+  const placeholderImage = `https://placehold.co/300x200/2d6a4f/ffffff/png?text=${encodeURIComponent(reward.category)}`;
 
   return (
     <div className="reward-card">
