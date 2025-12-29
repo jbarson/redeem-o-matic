@@ -52,6 +52,9 @@ const LoginPage: React.FC = () => {
   }, []);
 
   const handleUserSelect = async (user: User) => {
+    // Clear any previous errors
+    setError(null);
+    
     try {
       logger.userAction('User Login Attempt', {
         userId: user.id,
@@ -64,7 +67,8 @@ const LoginPage: React.FC = () => {
       });
       navigate('/');
     } catch (err: unknown) {
-      setError('Failed to login. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to login. Please try again.';
+      setError(errorMessage);
       logger.apiError('/auth/login', err, { userId: user.id });
     }
   };
@@ -79,22 +83,23 @@ const LoginPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="login-page">
-        <div className="login-container">
-          <h1>Error</h1>
-          <p className="error-message">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="login-page">
       <div className="login-container">
         <h1>Redeem-O-Matic</h1>
         <p className="subtitle">Select a user to continue</p>
+
+        {error && (
+          <div className="error-banner" style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#fee', color: '#c33', borderRadius: '4px' }}>
+            {error}
+            <button 
+              onClick={() => setError(null)} 
+              style={{ marginLeft: '10px', padding: '4px 8px', cursor: 'pointer' }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <div className="users-list">
           {users.map((user) => (
