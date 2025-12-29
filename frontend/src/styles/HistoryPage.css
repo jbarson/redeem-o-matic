@@ -1,0 +1,17 @@
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.history-header h1 {
+  margin: 0;
+  flex: 1;
+}
+
+.history-header .points-balance-widget {
+  max-width: 300px;
+}

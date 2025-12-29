@@ -1,0 +1,27 @@
+.points-balance-widget {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.balance-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.balance-amount {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.balance-unit {
+  font-size: 16px;
+  opacity: 0.9;
+}
