@@ -65,9 +65,13 @@ describe('RewardCard', () => {
   it('displays category placeholder when no image URL', () => {
     render(<RewardCard reward={mockReward} userBalance={1000} onRedeem={mockOnRedeem} />);
 
-    // The placeholder shows the category name
-    const placeholders = screen.getAllByText('Gift Card');
-    expect(placeholders.length).toBeGreaterThan(1); // Category appears in both label and placeholder
+    // The category should be displayed
+    expect(screen.getByText('Gift Card')).toBeInTheDocument();
+    
+    // The placeholder image should be used (contains category in URL)
+    const image = screen.getByAltText('Test Reward');
+    expect(image).toBeInTheDocument();
+    expect(image).toHaveAttribute('src', expect.stringContaining('Gift%20Card'));
   });
 
   it('displays image when image URL provided', () => {
