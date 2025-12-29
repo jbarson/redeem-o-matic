@@ -43,6 +43,20 @@
     ]
   },
   "devDependencies": {
-    "@types/react-router-dom": "^5.3.3"
+    "@types/react-router-dom": "^5.3.3",
+    "jest-environment-jsdom": "^30.2.0"
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!axios)/"
+    ],
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    },
+    "collectCoverageFrom": [
+      "src/components/rewards/RewardCard.tsx",
+      "src/components/user/PointsBalance.tsx",
+      "src/components/common/ConfirmModal.tsx"
+    ]
   }
 }
