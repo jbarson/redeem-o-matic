@@ -44,7 +44,8 @@ apiClient.interceptors.response.use(
     const endpoint = error.config?.url || 'unknown';
 
     // Handle 401 Unauthorized - clear auth and redirect to login
-    if (status === 401) {
+    // Don't redirect if we're already on the login page or if it's a login request
+    if (status === 401 && !endpoint.includes('/auth/login') && window.location.pathname !== '/login') {
       logger.apiError(endpoint, error, {
         message: 'Authentication failed',
         status,
@@ -52,10 +53,8 @@ apiClient.interceptors.response.use(
       // Clear auth data
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // Redirect to login
+      window.location.href = '/login';
     } else {
       // Log other errors
       logger.apiError(endpoint, error, {
