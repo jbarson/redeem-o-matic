@@ -1,6 +1,9 @@
 // Structured logging service for the application
 // Provides consistent logging with levels and can be extended to send logs to external services
 
+/* eslint-disable no-console */
+// Console statements are intentional for logging purposes
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {

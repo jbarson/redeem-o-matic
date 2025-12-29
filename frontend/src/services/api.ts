@@ -1,5 +1,5 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { User, Reward, Redemption, RedemptionResponse, RedemptionsHistoryResponse } from '../types';
+import axios, { AxiosError } from 'axios';
+import { User, Reward, RedemptionResponse, RedemptionsHistoryResponse } from '../types';
 import { logger } from './logger';
 
 // Use environment variable or fallback to localhost for development
