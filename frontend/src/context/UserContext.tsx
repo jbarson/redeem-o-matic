@@ -16,9 +16,25 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('auth_token');
-    // Only restore user if token exists
+    // Only restore user if token exists and user has valid structure
     if (storedUser && storedToken) {
-      return JSON.parse(storedUser);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Validate that the user object has required fields
+        if (parsedUser && typeof parsedUser.id === 'number') {
+          return parsedUser;
+        } else {
+          // Invalid user data, clear it
+          localStorage.removeItem('user');
+          localStorage.removeItem('auth_token');
+          return null;
+        }
+      } catch (e) {
+        // Invalid JSON, clear it
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        return null;
+      }
     }
     return null;
   });
@@ -42,11 +58,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const refreshBalance = useCallback(async () => {
-    if (user) {
+    if (user && user.id) {
       try {
         const updatedUser = await userApi.getBalance(user.id);
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Ensure the updated user has all required fields
+        if (updatedUser && typeof updatedUser.id === 'number') {
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
       } catch (error: unknown) {
         logger.apiError(`/users/${user.id}/balance`, error, { userId: user.id });
       }

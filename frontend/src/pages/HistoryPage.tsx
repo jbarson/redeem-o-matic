@@ -19,29 +19,44 @@ const HistoryPage: React.FC = () => {
     const controller = new AbortController();
 
     const fetchHistory = async () => {
-      if (user) {
-        try {
-          const history = await userApi.getRedemptions(user.id, undefined, controller.signal);
-          if (isMounted) {
-            setRedemptions(history.redemptions);
-          }
-        } catch (err: unknown) {
-          // Ignore abort errors
-          if (axios.isCancel && axios.isCancel(err)) {
-            return;
-          }
-          if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
-            return;
-          }
-          if (isMounted) {
-            const errorMessage = getErrorMessage(err, 'Failed to load redemption history. Please try again.');
-            setError(errorMessage);
-            logger.apiError(`/users/${user.id}/redemptions`, err);
-          }
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-          }
+      if (!user) {
+        if (isMounted) {
+          setLoading(false);
+          setError('Please log in to view your redemption history.');
+        }
+        return;
+      }
+
+      if (!user.id) {
+        if (isMounted) {
+          setLoading(false);
+          setError('Invalid user data. Please log in again.');
+          logger.error('User object missing id property', undefined, { user });
+        }
+        return;
+      }
+
+      try {
+        const history = await userApi.getRedemptions(user.id, undefined, controller.signal);
+        if (isMounted) {
+          setRedemptions(history.redemptions);
+        }
+      } catch (err: unknown) {
+        // Ignore abort errors
+        if (axios.isCancel && axios.isCancel(err)) {
+          return;
+        }
+        if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
+          return;
+        }
+        if (isMounted) {
+          const errorMessage = getErrorMessage(err, 'Failed to load redemption history. Please try again.');
+          setError(errorMessage);
+          logger.apiError(`/users/${user.id}/redemptions`, err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
     };
