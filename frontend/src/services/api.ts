@@ -12,38 +12,39 @@ const apiClient = axios.create({
 });
 
 export const userApi = {
-  getAll: async (): Promise<User[]> => {
-    const response = await apiClient.get('/users');
+  getAll: async (signal?: AbortSignal): Promise<User[]> => {
+    const response = await apiClient.get('/users', { signal });
     return response.data.users;
   },
 
-  getBalance: async (id: number): Promise<User> => {
-    const response = await apiClient.get(`/users/${id}/balance`);
+  getBalance: async (id: number, signal?: AbortSignal): Promise<User> => {
+    const response = await apiClient.get(`/users/${id}/balance`, { signal });
     return response.data;
   },
 
   getRedemptions: async (
     userId: number,
-    params?: { limit?: number; offset?: number }
+    params?: { limit?: number; offset?: number },
+    signal?: AbortSignal
   ): Promise<RedemptionsHistoryResponse> => {
-    const response = await apiClient.get(`/users/${userId}/redemptions`, { params });
+    const response = await apiClient.get(`/users/${userId}/redemptions`, { params, signal });
     return response.data;
   },
 };
 
 export const rewardsApi = {
-  getAll: async (): Promise<Reward[]> => {
-    const response = await apiClient.get('/rewards');
+  getAll: async (signal?: AbortSignal): Promise<Reward[]> => {
+    const response = await apiClient.get('/rewards', { signal });
     return response.data.rewards;
   },
 };
 
 export const redemptionsApi = {
-  create: async (userId: number, rewardId: number): Promise<RedemptionResponse> => {
+  create: async (userId: number, rewardId: number, signal?: AbortSignal): Promise<RedemptionResponse> => {
     const response = await apiClient.post('/redemptions', {
       user_id: userId,
       reward_id: rewardId,
-    });
+    }, { signal });
     return response.data;
   },
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { rewardsApi, redemptionsApi } from '../services/api';
 import { Reward, getErrorMessage } from '../types';
@@ -22,11 +23,18 @@ const RewardsPage: React.FC = () => {
 
     const fetchRewards = async () => {
       try {
-        const fetchedRewards = await rewardsApi.getAll();
+        const fetchedRewards = await rewardsApi.getAll(controller.signal);
         if (isMounted) {
           setRewards(fetchedRewards);
         }
       } catch (err: unknown) {
+        // Ignore abort errors
+        if (axios.isCancel && axios.isCancel(err)) {
+          return;
+        }
+        if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
+          return;
+        }
         if (isMounted) {
           const errorMessage = getErrorMessage(err, 'Failed to load rewards. Please try again.');
           setError(errorMessage);
@@ -76,7 +84,9 @@ const RewardsPage: React.FC = () => {
 
       // Refresh rewards list to update stock
       const updatedRewards = await rewardsApi.getAll();
-      setRewards(updatedRewards);
+      if (isMounted) {
+        setRewards(updatedRewards);
+      }
 
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);

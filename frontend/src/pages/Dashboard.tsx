@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
 import { logger } from '../services/logger';
@@ -18,11 +19,18 @@ const Dashboard: React.FC = () => {
     const fetchStats = async () => {
       if (user) {
         try {
-          const history = await userApi.getRedemptions(user.id, { limit: 1 });
+          const history = await userApi.getRedemptions(user.id, { limit: 1 }, controller.signal);
           if (isMounted) {
             setTotalRedemptions(history.total_count);
           }
         } catch (error: unknown) {
+          // Ignore abort errors
+          if (axios.isCancel && axios.isCancel(error)) {
+            return;
+          }
+          if (error instanceof Error && (error.name === 'CanceledError' || (error as any).code === 'ERR_CANCELED')) {
+            return;
+          }
           if (isMounted) {
             logger.apiError(`/users/${user.id}/redemptions`, error);
           }

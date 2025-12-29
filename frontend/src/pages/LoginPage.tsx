@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
 import { User } from '../types';
@@ -19,11 +20,18 @@ const LoginPage: React.FC = () => {
 
     const fetchUsers = async () => {
       try {
-        const fetchedUsers = await userApi.getAll();
+        const fetchedUsers = await userApi.getAll(controller.signal);
         if (isMounted) {
           setUsers(fetchedUsers);
         }
       } catch (err: unknown) {
+        // Ignore abort errors
+        if (axios.isCancel && axios.isCancel(err)) {
+          return;
+        }
+        if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
+          return;
+        }
         if (isMounted) {
           setError('Failed to load users. Please try again.');
           logger.apiError('/users', err);

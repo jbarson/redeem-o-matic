@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
 import { Redemption } from '../types';
@@ -20,11 +21,18 @@ const HistoryPage: React.FC = () => {
     const fetchHistory = async () => {
       if (user) {
         try {
-          const history = await userApi.getRedemptions(user.id);
+          const history = await userApi.getRedemptions(user.id, undefined, controller.signal);
           if (isMounted) {
             setRedemptions(history.redemptions);
           }
         } catch (err: unknown) {
+          // Ignore abort errors
+          if (axios.isCancel && axios.isCancel(err)) {
+            return;
+          }
+          if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
+            return;
+          }
           if (isMounted) {
             setError('Failed to load redemption history. Please try again.');
             logger.apiError(`/users/${user.id}/redemptions`, err);
