@@ -2,13 +2,14 @@ require 'rails_helper'
 
 RSpec.describe "Api::V1::Rewards", type: :request do
   let(:json_response) { JSON.parse(response.body) }
+  let(:user) { create(:user) }
 
   describe "GET /api/v1/rewards" do
     it "returns all active rewards" do
       active_rewards = create_list(:reward, 3, active: true)
       inactive_reward = create(:reward, active: false)
 
-      get '/api/v1/rewards'
+      get '/api/v1/rewards', headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response['rewards'].size).to eq(3)
@@ -28,7 +29,7 @@ RSpec.describe "Api::V1::Rewards", type: :request do
         active: true
       )
 
-      get '/api/v1/rewards'
+      get '/api/v1/rewards', headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       reward_json = json_response['rewards'].first
@@ -46,7 +47,7 @@ RSpec.describe "Api::V1::Rewards", type: :request do
     it "returns an empty array when no active rewards exist" do
       create_list(:reward, 2, active: false)
 
-      get '/api/v1/rewards'
+      get '/api/v1/rewards', headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response['rewards']).to eq([])
@@ -55,7 +56,7 @@ RSpec.describe "Api::V1::Rewards", type: :request do
     it "handles rewards with nil stock_quantity" do
       reward = create(:reward, stock_quantity: nil)
 
-      get '/api/v1/rewards'
+      get '/api/v1/rewards', headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       reward_json = json_response['rewards'].first

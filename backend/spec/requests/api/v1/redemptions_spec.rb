@@ -10,7 +10,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
     context "with valid parameters" do
       it "creates a redemption and updates user balance" do
         expect {
-          post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+          post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
         }.to change { Redemption.count }.by(1)
 
         expect(response).to have_http_status(:created)
@@ -19,7 +19,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       end
 
       it "decrements reward stock_quantity when present" do
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(response).to have_http_status(:created)
         expect(reward.reload.stock_quantity).to eq(9)
@@ -28,14 +28,14 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       it "does not decrement stock_quantity when nil" do
         unlimited_reward = create(:reward, cost: 500, stock_quantity: nil)
 
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: unlimited_reward.id }
+        post '/api/v1/redemptions', params: { reward_id: unlimited_reward.id }, headers: auth_headers_for(user)
 
         expect(response).to have_http_status(:created)
         expect(unlimited_reward.reload.stock_quantity).to be_nil
       end
 
       it "returns the redemption details" do
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(response).to have_http_status(:created)
         redemption_json = json_response['redemption']
@@ -54,7 +54,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         user.update(points_balance: 100)
 
         expect {
-          post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+          post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
         }.not_to change { Redemption.count }
 
         expect(response).to have_http_status(:unprocessable_entity)
@@ -64,7 +64,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       it "does not update user balance when insufficient points" do
         user.update(points_balance: 100)
 
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(user.reload.points_balance).to eq(100)
       end
@@ -73,7 +73,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         user.update(points_balance: 100)
         initial_stock = reward.stock_quantity
 
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(reward.reload.stock_quantity).to eq(initial_stock)
       end
@@ -84,7 +84,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         reward.update(stock_quantity: 0)
 
         expect {
-          post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+          post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
         }.not_to change { Redemption.count }
 
         expect(response).to have_http_status(:unprocessable_entity)
@@ -94,7 +94,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       it "does not update user balance when out of stock" do
         reward.update(stock_quantity: 0)
 
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(user.reload.points_balance).to eq(1000)
       end
@@ -105,7 +105,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         reward.update(active: false)
 
         expect {
-          post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+          post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
         }.not_to change { Redemption.count }
 
         expect(response).to have_http_status(:unprocessable_entity)
@@ -113,18 +113,9 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
       end
     end
 
-    context "with non-existent user" do
-      it "returns 404 error" do
-        post '/api/v1/redemptions', params: { user_id: 999, reward_id: reward.id }
-
-        expect(response).to have_http_status(:not_found)
-        expect(json_response['error']).to eq('User or Reward not found')
-      end
-    end
-
     context "with non-existent reward" do
       it "returns 404 error" do
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: 999 }
+        post '/api/v1/redemptions', params: { reward_id: 999 }, headers: auth_headers_for(user)
 
         expect(response).to have_http_status(:not_found)
         expect(json_response['error']).to eq('User or Reward not found')
@@ -139,7 +130,7 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         initial_user_balance = user.points_balance
         initial_stock = reward.stock_quantity
 
-        post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+        post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers_for(user)
 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(user.reload.points_balance).to eq(initial_user_balance)
@@ -156,10 +147,11 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
 
         # Simulate concurrent requests using threads
         results = []
+        auth_headers = auth_headers_for(user)
         threads = 2.times.map do
           Thread.new do
             begin
-              post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+              post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers
               results << { status: response.status, body: JSON.parse(response.body) }
             rescue => e
               results << { error: e.message }
@@ -187,10 +179,11 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
 
         # Simulate 3 concurrent requests
         results = []
+        auth_headers = auth_headers_for(user)
         threads = 3.times.map do
           Thread.new do
             begin
-              post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+              post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers
               results << { status: response.status, body: JSON.parse(response.body) }
             rescue => e
               results << { error: e.message }
@@ -219,9 +212,10 @@ RSpec.describe "Api::V1::Redemptions", type: :request do
         initial_stock = reward.stock_quantity
 
         # Simulate 2 concurrent redemptions that should both succeed
+        auth_headers = auth_headers_for(user)
         threads = 2.times.map do
           Thread.new do
-            post '/api/v1/redemptions', params: { user_id: user.id, reward_id: reward.id }
+            post '/api/v1/redemptions', params: { reward_id: reward.id }, headers: auth_headers
           end
         end
 
