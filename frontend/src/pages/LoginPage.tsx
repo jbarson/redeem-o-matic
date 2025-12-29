@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
 import { User } from '../types';
+import { logger } from '../services/logger';
 import '../styles/LoginPage.css';
 
 const LoginPage: React.FC = () => {
@@ -17,9 +18,9 @@ const LoginPage: React.FC = () => {
       try {
         const fetchedUsers = await userApi.getAll();
         setUsers(fetchedUsers);
-      } catch (err) {
+      } catch (err: unknown) {
         setError('Failed to load users. Please try again.');
-        console.error('Error fetching users:', err);
+        logger.apiError('/users', err);
       } finally {
         setLoading(false);
       }
@@ -29,6 +30,10 @@ const LoginPage: React.FC = () => {
   }, []);
 
   const handleUserSelect = (user: User) => {
+    logger.userAction('User Login', {
+      userId: user.id,
+      userName: user.name,
+    });
     login(user);
     navigate('/');
   };

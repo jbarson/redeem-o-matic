@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
 import { User } from '../types';
 import { userApi } from '../services/api';
+import { logger } from '../services/logger';
 
 interface UserContextType {
   user: User | null;
@@ -33,8 +34,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const updatedUser = await userApi.getBalance(user.id);
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-      } catch (error) {
-        console.error('Failed to refresh balance:', error);
+      } catch (error: unknown) {
+        logger.apiError(`/users/${user.id}/balance`, error, { userId: user.id });
       }
     }
   }, [user]);

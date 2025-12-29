@@ -7,7 +7,9 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:3001"
+    # Support multiple origins via comma-separated ENV variable
+    # Example: CORS_ORIGINS=http://localhost:3001,https://app.yourdomain.com
+    origins ENV.fetch('CORS_ORIGINS', 'http://localhost:3001').split(',').map(&:strip)
 
     resource "*",
       headers: :any,

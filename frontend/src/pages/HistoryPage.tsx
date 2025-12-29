@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
 import { Redemption } from '../types';
+import { logger } from '../services/logger';
 import RedemptionHistory from '../components/redemptions/RedemptionHistory';
 import PointsBalance from '../components/user/PointsBalance';
 import '../styles/HistoryPage.css';
@@ -18,9 +19,9 @@ const HistoryPage: React.FC = () => {
         try {
           const history = await userApi.getRedemptions(user.id);
           setRedemptions(history.redemptions);
-        } catch (err) {
+        } catch (err: unknown) {
           setError('Failed to load redemption history. Please try again.');
-          console.error('Error fetching history:', err);
+          logger.apiError(`/users/${user.id}/redemptions`, err);
         } finally {
           setLoading(false);
         }

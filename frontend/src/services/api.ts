@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { User, Reward, Redemption, RedemptionResponse, RedemptionsHistoryResponse } from '../types';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+// Use environment variable or fallback to localhost for development
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

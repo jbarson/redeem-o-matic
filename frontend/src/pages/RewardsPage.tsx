@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { rewardsApi, redemptionsApi } from '../services/api';
-import { Reward } from '../types';
+import { Reward, getErrorMessage } from '../types';
+import { logger } from '../services/logger';
 import RewardCard from '../components/rewards/RewardCard';
 import ConfirmModal from '../components/common/ConfirmModal';
 import '../styles/RewardsPage.css';
@@ -20,9 +21,10 @@ const RewardsPage: React.FC = () => {
       try {
         const fetchedRewards = await rewardsApi.getAll();
         setRewards(fetchedRewards);
-      } catch (err) {
-        setError('Failed to load rewards. Please try again.');
-        console.error('Error fetching rewards:', err);
+      } catch (err: unknown) {
+        const errorMessage = getErrorMessage(err, 'Failed to load rewards. Please try again.');
+        setError(errorMessage);
+        logger.apiError('/rewards', err);
       } finally {
         setLoading(false);
       }
@@ -47,6 +49,14 @@ const RewardsPage: React.FC = () => {
       await redemptionsApi.create(user.id, selectedReward.id);
       await refreshBalance();
 
+      // Log successful redemption
+      logger.userAction('Reward Redeemed', {
+        rewardId: selectedReward.id,
+        rewardName: selectedReward.name,
+        cost: selectedReward.cost,
+        userId: user.id,
+      });
+
       setSuccessMessage(`Successfully redeemed ${selectedReward.name}!`);
       setSelectedReward(null);
 
@@ -56,10 +66,13 @@ const RewardsPage: React.FC = () => {
 
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error || 'Failed to redeem reward. Please try again.';
+    } catch (err: unknown) {
+      const errorMessage = getErrorMessage(err, 'Failed to redeem reward. Please try again.');
       setError(errorMessage);
+      logger.apiError('/redemptions', err, {
+        rewardId: selectedReward.id,
+        userId: user.id,
+      });
       setSelectedReward(null);
     } finally {
       setRedeeming(false);

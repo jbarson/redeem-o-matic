@@ -43,3 +43,36 @@ export interface RedemptionsHistoryResponse {
   total_count: number;
   current_balance: number;
 }
+
+// Error handling types
+export interface ApiErrorResponse {
+  error: string;
+  required?: number;
+  available?: number;
+}
+
+export interface ApiError {
+  response?: {
+    data?: ApiErrorResponse;
+    status?: number;
+  };
+  message?: string;
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error
+  );
+}
+
+export function getErrorMessage(error: unknown, defaultMessage: string): string {
+  if (isApiError(error)) {
+    return error.response?.data?.error || defaultMessage;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return defaultMessage;
+}

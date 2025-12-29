@@ -40,8 +40,23 @@ class Api::V1::UsersController < ApplicationController
   private
 
   def set_user
+    validate_user_id!
     @user = User.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'User not found' }, status: :not_found
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :bad_request
+  end
+
+  def validate_user_id!
+    if params[:id].blank?
+      raise ArgumentError, 'id is required'
+    end
+
+    begin
+      Integer(params[:id])
+    rescue ArgumentError, TypeError
+      raise ArgumentError, 'id must be a valid number'
+    end
   end
 end
