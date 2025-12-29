@@ -1,25 +1,100 @@
+# ============================================================================
+# Redeem-O-Matic Git Ignore Configuration
+# ============================================================================
+# Consolidated from root, backend, and frontend .gitignore files
+# ============================================================================
+
+# ----------------------------------------------------------------------------
 # Backend (Rails)
+# ----------------------------------------------------------------------------
+
+# Bundler
+backend/.bundle
+/.bundle
+
+# Environment files
+backend/.env*
+/.env*
+
+# Logs and temporary files
 backend/log/*
 backend/tmp/*
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Pidfiles
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Database files
 backend/db/*.sqlite3
 backend/db/*.sqlite3-*
+
+# Storage (uploaded files and SQLite databases)
 backend/storage/*
-backend/.bundle
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+
+# Rails master key
+backend/config/master.key
+/config/master.key
+
+# Test coverage
+backend/coverage/
+/coverage/
+
+# Backend log file
 backend.log
 
+# ----------------------------------------------------------------------------
 # Frontend (React)
+# ----------------------------------------------------------------------------
+
+# Dependencies
 frontend/node_modules/
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+frontend/coverage
+/coverage
+
+# Production build
 frontend/build/
+/build
+
+# Environment files
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend log file
 frontend.log
 
+# ----------------------------------------------------------------------------
 # OS Files
+# ----------------------------------------------------------------------------
+
 .DS_Store
 .DS_Store?
 ._*
@@ -28,7 +103,10 @@ frontend.log
 ehthumbs.db
 Thumbs.db
 
+# ----------------------------------------------------------------------------
 # IDE
+# ----------------------------------------------------------------------------
+
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -36,7 +114,10 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 
+# ----------------------------------------------------------------------------
 # Keep directories
+# ----------------------------------------------------------------------------
+
 !backend/log/.keep
 !backend/tmp/.keep
 !backend/storage/.keep
