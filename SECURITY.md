@@ -2,43 +2,66 @@
 
 ## Current Security Status
 
-**⚠️ IMPORTANT: This application is a demonstration/evaluation project and is NOT production-ready as-is.**
+**⚠️ IMPORTANT: This application is a demonstration/evaluation project. While basic security measures are implemented, additional hardening is recommended for production use.**
 
-### Known Security Limitations
+### ✅ Implemented Security Features
 
-#### 1. **No Authentication/Authorization (CRITICAL)**
+#### 1. **Authentication & Authorization (IMPLEMENTED)**
 
-**Current State:**
-- Users can select any account without password verification
-- All API endpoints are unprotected
-- Any user can access any other user's data by modifying request parameters
-- User IDs are passed as plain parameters with no verification
+**Current Implementation:**
+- ✅ JWT-based authentication using `jwt` gem
+- ✅ Protected API endpoints with `authenticate_user!` before_action
+- ✅ Token-based authorization (Bearer tokens in Authorization header)
+- ✅ Users can only access their own data (authorization checks in controllers)
+- ✅ Token expiration (24 hours)
+- ✅ Frontend stores tokens in localStorage and includes them in requests
+- ✅ Login endpoint at `/api/v1/auth/login` (public, for demo accepts user_id)
 
-**Risk:**
-- Complete unauthorized access to all user data
-- Ability to redeem rewards on behalf of other users
-- Access to sensitive information (emails, balances, transaction history)
+**Note:** For production, consider:
+- Password-based authentication (currently uses user_id for demo)
+- Token refresh mechanism
+- More granular role-based access control (RBAC)
 
-**For Production:** Implement proper authentication before deployment.
+#### 2. **Rate Limiting (IMPLEMENTED)**
 
-#### 2. **Data Exposure**
+**Current Implementation:**
+- ✅ Rack::Attack middleware configured
+- ✅ General API throttling (300 requests per 5 minutes per IP)
+- ✅ Login endpoint throttling (5 attempts per 20 seconds per IP)
+- ✅ Redemption endpoint throttling (10 per minute per IP)
+- ✅ Custom 429 response with rate limit headers
 
-**Current State:**
-- `/api/v1/users` endpoint returns all users including emails
-- No pagination or rate limiting
-- User data stored in localStorage as plain JSON
-
-**Risk:**
-- Information disclosure
-- Privacy violations
-- GDPR/CCPA non-compliance
-
-#### 3. **Session Management**
+#### 3. **Data Protection**
 
 **Current State:**
-- No session timeouts
-- No secure session storage
-- No CSRF protection
+- ✅ CORS configured with credentials support
+- ✅ Authorization header exposed to frontend
+- ✅ User data access restricted (users can only access their own data)
+- ⚠️ `/api/v1/users` endpoint returns minimal data (id, name only) for login selection
+- ⚠️ User data stored in localStorage (consider httpOnly cookies for production)
+- ⚠️ No pagination on endpoints (consider adding for large datasets)
+
+#### 4. **Input Validation (IMPLEMENTED)**
+
+**Current Implementation:**
+- ✅ Parameter validation on all API endpoints
+- ✅ Type checking for IDs
+- ✅ Presence validation
+- ✅ Model-level validations (points_balance >= 0, etc.)
+
+### ⚠️ Known Security Limitations
+
+#### 1. **Session Management**
+
+**Current State:**
+- ⚠️ No session timeouts (tokens expire after 24 hours)
+- ⚠️ Tokens stored in localStorage (XSS vulnerability if not properly sanitized)
+- ⚠️ No CSRF protection (not needed for API-only, but consider for cookie-based auth)
+
+**Recommendation:** For production, implement:
+- Token refresh mechanism
+- Shorter token expiration with refresh tokens
+- Consider httpOnly cookies for token storage
 
 ---
 
@@ -46,91 +69,37 @@
 
 Before deploying this application to production, implement the following security measures:
 
-### ✅ Authentication & Authorization
+### ✅ Authentication & Authorization (✓ Implemented)
 
-#### Option 1: JWT-Based Authentication (Recommended for API)
+**Current Implementation:**
+- ✅ JWT-based authentication using `jwt` gem
+- ✅ Authentication controller at `app/controllers/api/v1/auth_controller.rb`
+- ✅ `authenticate_user!` before_action in `ApplicationController`
+- ✅ Token-based authorization with Bearer tokens
+- ✅ Users can only access their own data (authorization checks)
+- ✅ Frontend stores tokens and includes in Authorization header
+- ✅ Token expiration (24 hours)
 
-1. **Add authentication gems:**
-   ```ruby
-   # Gemfile
-   gem 'bcrypt'      # Password hashing
-   gem 'jwt'         # JSON Web Tokens
-   ```
+**Implementation Details:**
+```ruby
+# Gemfile
+gem 'jwt', '~> 2.9'
 
-2. **Add password to User model:**
-   ```ruby
-   rails g migration AddPasswordDigestToUsers password_digest:string
-   rails db:migrate
+# app/controllers/application_controller.rb
+# See backend/app/controllers/application_controller.rb
 
-   # app/models/user.rb
-   class User < ApplicationRecord
-     has_secure_password
-     validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-     validates :password, length: { minimum: 8 }, allow_nil: true
-   end
-   ```
+# app/controllers/api/v1/auth_controller.rb
+# See backend/app/controllers/api/v1/auth_controller.rb
 
-3. **Create authentication controller:**
-   ```ruby
-   # app/controllers/api/v1/auth_controller.rb
-   class Api::V1::AuthController < ApplicationController
-     def login
-       user = User.find_by(email: params[:email])
+# Frontend: services/api.ts
+# See frontend/src/services/api.ts for Axios interceptors
+```
 
-       if user&.authenticate(params[:password])
-         token = encode_token({ user_id: user.id })
-         render json: { token: token, user: user.as_json(only: [:id, :name, :email, :points_balance]) }
-       else
-         render json: { error: 'Invalid credentials' }, status: :unauthorized
-       end
-     end
-
-     private
-
-     def encode_token(payload)
-       JWT.encode(payload, Rails.application.credentials.secret_key_base)
-     end
-   end
-   ```
-
-4. **Add authentication middleware:**
-   ```ruby
-   # app/controllers/application_controller.rb
-   class ApplicationController < ActionController::API
-     before_action :authenticate_user!
-
-     private
-
-     def authenticate_user!
-       header = request.headers['Authorization']
-       token = header.split(' ').last if header
-
-       begin
-         decoded = JWT.decode(token, Rails.application.credentials.secret_key_base)[0]
-         @current_user = User.find(decoded['user_id'])
-       rescue ActiveRecord::RecordNotFound, JWT::DecodeError
-         render json: { error: 'Unauthorized' }, status: :unauthorized
-       end
-     end
-
-     def current_user
-       @current_user
-     end
-   end
-   ```
-
-5. **Update frontend to store and send JWT:**
-   ```typescript
-   // services/api.ts
-   const token = localStorage.getItem('auth_token');
-   const apiClient = axios.create({
-     baseURL: API_BASE_URL,
-     headers: {
-       'Content-Type': 'application/json',
-       ...(token && { 'Authorization': `Bearer ${token}` }),
-     },
-   });
-   ```
+**For Production Enhancement:**
+- Add password-based authentication (currently uses user_id for demo)
+- Implement token refresh mechanism
+- Consider shorter token expiration with refresh tokens
+- Add role-based access control (RBAC) for admin functions
 
 #### Option 2: OAuth 2.0 / OpenID Connect
 
@@ -139,38 +108,25 @@ For enterprise applications, consider using:
 - **OmniAuth** (OAuth consumer - Google, GitHub, etc.)
 - External identity providers (Auth0, Okta, AWS Cognito)
 
-### ✅ Authorization
+### ✅ Authorization (✓ Implemented)
 
-1. **Implement role-based access control:**
-   ```ruby
-   # app/models/user.rb
-   enum role: { user: 0, admin: 1 }
-   ```
+**Current Implementation:**
+- ✅ Users can only access their own data
+- ✅ Authorization checks in controllers (e.g., `current_user.id` validation)
+- ✅ Protected endpoints require valid JWT token
+- ✅ 403 Forbidden responses for unauthorized access attempts
 
-2. **Use Pundit or CanCanCan for authorization:**
-   ```ruby
-   # Gemfile
-   gem 'pundit'
+**Implementation:**
+```ruby
+# Controllers use current_user from JWT token
+# Users can only access their own balance, redemptions, etc.
+# See backend/app/controllers/api/v1/users_controller.rb
+# See backend/app/controllers/api/v1/redemptions_controller.rb
+```
 
-   # app/policies/redemption_policy.rb
-   class RedemptionPolicy < ApplicationPolicy
-     def create?
-       record.user == user && user.points_balance >= record.reward.cost
-     end
-   end
-   ```
-
-3. **Protect user data access:**
-   ```ruby
-   # Ensure users can only access their own data
-   def balance
-     unless @user.id == current_user.id
-       render json: { error: 'Unauthorized' }, status: :forbidden
-       return
-     end
-     # ... render balance
-   end
-   ```
+**For Production Enhancement:**
+- Add role-based access control (RBAC) for admin functions
+- Consider using Pundit or CanCanCan for more complex authorization rules
 
 ### ✅ Data Protection
 
@@ -203,25 +159,26 @@ For enterprise applications, consider using:
      same_site: :lax
    ```
 
-### ✅ Rate Limiting
+### ✅ Rate Limiting (✓ Implemented)
 
-1. **Install Rack::Attack:**
-   ```ruby
-   # Gemfile
-   gem 'rack-attack'
+**Current Implementation:**
+- ✅ Rack::Attack middleware configured
+- ✅ General API throttling (300 requests per 5 minutes per IP)
+- ✅ Login endpoint throttling (5 attempts per 20 seconds per IP)
+- ✅ Redemption endpoint throttling (10 per minute per IP)
+- ✅ Custom 429 response with rate limit headers
 
-   # config/application.rb
-   config.middleware.use Rack::Attack
+**Configuration:**
+```ruby
+# Gemfile
+gem 'rack-attack'
 
-   # config/initializers/rack_attack.rb
-   Rack::Attack.throttle('req/ip', limit: 300, period: 5.minutes) do |req|
-     req.ip
-   end
+# config/application.rb
+config.middleware.use Rack::Attack
 
-   Rack::Attack.throttle('logins/ip', limit: 5, period: 20.seconds) do |req|
-     req.ip if req.path == '/api/v1/auth/login' && req.post?
-   end
-   ```
+# config/initializers/rack_attack.rb
+# See backend/config/initializers/rack_attack.rb for full configuration
+```
 
 ### ✅ Input Validation (✓ Implemented)
 
@@ -395,4 +352,4 @@ For security concerns or to report vulnerabilities, please contact:
 
 ---
 
-**Last Updated:** 2025-12-29
+**Last Updated:** 2025-12-30

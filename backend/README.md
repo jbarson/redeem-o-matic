@@ -1,24 +1,28 @@
-# README
+# Backend (Rails API)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is the Rails API backend for Redeem-O-Matic.
 
-Things you may want to cover:
+For complete documentation, setup instructions, and development workflow, see the [root README.md](../README.md).
 
-* Ruby version
+## Quick Start
 
-* System dependencies
+```bash
+# Install dependencies
+bundle install
 
-* Configuration
+# Setup database
+rails db:create db:migrate db:seed
 
-* Database creation
+# Run tests
+bundle exec rspec
 
-* Database initialization
+# Start server
+rails server
+```
 
-* How to run the test suite
+## Key Files
 
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+- `app/controllers/api/v1/` - API endpoints
+- `app/models/` - Database models
+- `config/routes.rb` - API routes
+- `spec/` - Test suite
