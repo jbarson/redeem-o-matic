@@ -1,0 +1,41 @@
+{
+  "name": "Redeem-O-Matic Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rebornix.ruby",
+        "Shopify.ruby-lsp",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "dsznajder.es7-react-js-snippets",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[ruby]": {
+          "editor.defaultFormatter": "Shopify.ruby-lsp"
+        }
+      }
+    }
+  },
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Rails API",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "React App",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "echo 'Dev container ready! Run setup instructions in README.md'",
+  "remoteUser": "root"
+}
