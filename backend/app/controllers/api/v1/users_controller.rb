@@ -16,7 +16,7 @@ class Api::V1::UsersController < ApplicationController
     end
 
     render json: {
-      user_id: current_user.id,
+      id: current_user.id,
       name: current_user.name,
       email: current_user.email,
       points_balance: current_user.points_balance
