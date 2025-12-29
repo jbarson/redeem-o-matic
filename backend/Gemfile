@@ -57,3 +57,6 @@ end
 
 # CORS configuration for React frontend
 gem 'rack-cors'
+
+# Rate limiting
+gem 'rack-attack'
