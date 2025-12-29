@@ -39,11 +39,15 @@ class Api::V1::UsersController < ApplicationController
       return
     end
 
+    # Validate and sanitize pagination parameters
+    limit = validate_pagination_limit(params[:limit])
+    offset = validate_pagination_offset(params[:offset])
+
     user_redemptions = current_user.redemptions
                                    .includes(:reward)
                                    .order(created_at: :desc)
-                                   .limit(params[:limit] || 50)
-                                   .offset(params[:offset] || 0)
+                                   .limit(limit)
+                                   .offset(offset)
 
     render json: {
       redemptions: user_redemptions.as_json(
@@ -59,5 +63,37 @@ class Api::V1::UsersController < ApplicationController
     Rails.logger.error("Error fetching redemptions: #{e.message}")
     Rails.logger.error(e.backtrace.join("\n"))
     render json: { error: 'An error occurred while fetching redemption history' }, status: :internal_server_error
+  end
+
+  private
+
+  # Validate and sanitize limit parameter
+  # Returns a value between 1 and 100, defaulting to 50
+  def validate_pagination_limit(limit_param)
+    return 50 if limit_param.blank?
+
+    begin
+      limit = Integer(limit_param)
+      # Clamp between 1 and 100
+      limit.clamp(1, 100)
+    rescue ArgumentError, TypeError
+      # Invalid input, return default
+      50
+    end
+  end
+
+  # Validate and sanitize offset parameter
+  # Returns a non-negative integer, defaulting to 0
+  def validate_pagination_offset(offset_param)
+    return 0 if offset_param.blank?
+
+    begin
+      offset = Integer(offset_param)
+      # Ensure non-negative
+      [offset, 0].max
+    rescue ArgumentError, TypeError
+      # Invalid input, return default
+      0
+    end
   end
 end

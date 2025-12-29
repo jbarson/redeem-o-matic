@@ -25,10 +25,11 @@ const Dashboard: React.FC = () => {
           }
         } catch (error: unknown) {
           // Ignore abort errors
-          if (axios.isCancel && axios.isCancel(error)) {
+          if (error instanceof Error && (error.name === 'CanceledError' || (error as any).code === 'ERR_CANCELED')) {
             return;
           }
-          if (error instanceof Error && (error.name === 'CanceledError' || (error as any).code === 'ERR_CANCELED')) {
+          // Check for Axios cancel errors (if axios.isCancel function exists)
+          if (typeof axios.isCancel === 'function' && axios.isCancel(error)) {
             return;
           }
           if (isMounted) {

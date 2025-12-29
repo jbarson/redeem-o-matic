@@ -31,10 +31,11 @@ const RewardsPage: React.FC = () => {
         }
       } catch (err: unknown) {
         // Ignore abort errors
-        if (axios.isCancel && axios.isCancel(err)) {
+        if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
           return;
         }
-        if (err instanceof Error && (err.name === 'CanceledError' || (err as any).code === 'ERR_CANCELED')) {
+        // Check for Axios cancel errors (if axios.isCancel function exists)
+        if (typeof axios.isCancel === 'function' && axios.isCancel(err)) {
           return;
         }
         if (isMountedRef.current) {
