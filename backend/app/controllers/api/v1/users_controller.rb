@@ -29,7 +29,7 @@ class Api::V1::UsersController < ApplicationController
       redemptions: user_redemptions.as_json(
         only: [:id, :points_spent, :status, :created_at],
         include: {
-          reward: { only: [:id, :name, :image_url] }
+          reward: { only: [:id, :name, :image_url, :category] }
         }
       ),
       total_count: @user.redemptions.count,
