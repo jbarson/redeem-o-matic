@@ -71,10 +71,6 @@ const LoginPage: React.FC = () => {
                 <h3>{user.name}</h3>
                 <p className="user-email">{user.email}</p>
               </div>
-              <div className="user-balance">
-                <span className="points">{user.points_balance}</span>
-                <span className="points-label">points</span>
-              </div>
             </div>
           ))}
         </div>
