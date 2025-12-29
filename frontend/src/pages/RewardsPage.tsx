@@ -92,7 +92,7 @@ const RewardsPage: React.FC = () => {
     setError(null);
 
     try {
-      await redemptionsApi.create(user.id, selectedReward.id);
+      await redemptionsApi.create(selectedReward.id);
       await refreshBalance();
 
       // Log successful redemption

@@ -8,6 +8,10 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
+      # Authentication endpoint (public)
+      post 'auth/login', to: 'auth#login'
+
+      # Protected endpoints
       resources :rewards, only: [:index]
       resources :redemptions, only: [:create]
 

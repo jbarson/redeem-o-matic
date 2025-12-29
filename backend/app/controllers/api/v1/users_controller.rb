@@ -1,29 +1,41 @@
 class Api::V1::UsersController < ApplicationController
-  before_action :set_user, only: [:balance, :redemptions]
+  skip_before_action :authenticate_user!, only: [:index]
 
-  # GET /api/v1/users
+  # GET /api/v1/users (public - for login selection, minimal info only)
   def index
     users = User.all
-    render json: { users: users.as_json(only: [:id, :name, :email, :points_balance]) }
+    render json: { users: users.as_json(only: [:id, :name]) }
   end
 
   # GET /api/v1/users/:id/balance
   def balance
+    # Users can only access their own balance
+    unless current_user.id == params[:id].to_i
+      render json: { error: 'Forbidden - You can only access your own data' }, status: :forbidden
+      return
+    end
+
     render json: {
-      user_id: @user.id,
-      name: @user.name,
-      email: @user.email,
-      points_balance: @user.points_balance
+      user_id: current_user.id,
+      name: current_user.name,
+      email: current_user.email,
+      points_balance: current_user.points_balance
     }
   end
 
   # GET /api/v1/users/:id/redemptions
   def redemptions
-    user_redemptions = @user.redemptions
-                             .includes(:reward)
-                             .order(created_at: :desc)
-                             .limit(params[:limit] || 50)
-                             .offset(params[:offset] || 0)
+    # Users can only access their own redemptions
+    unless current_user.id == params[:id].to_i
+      render json: { error: 'Forbidden - You can only access your own data' }, status: :forbidden
+      return
+    end
+
+    user_redemptions = current_user.redemptions
+                                   .includes(:reward)
+                                   .order(created_at: :desc)
+                                   .limit(params[:limit] || 50)
+                                   .offset(params[:offset] || 0)
 
     render json: {
       redemptions: user_redemptions.as_json(
@@ -32,31 +44,8 @@ class Api::V1::UsersController < ApplicationController
           reward: { only: [:id, :name, :image_url, :category] }
         }
       ),
-      total_count: @user.redemptions.count,
-      current_balance: @user.points_balance
+      total_count: current_user.redemptions.count,
+      current_balance: current_user.points_balance
     }
-  end
-
-  private
-
-  def set_user
-    validate_user_id!
-    @user = User.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'User not found' }, status: :not_found
-  rescue ArgumentError => e
-    render json: { error: e.message }, status: :bad_request
-  end
-
-  def validate_user_id!
-    if params[:id].blank?
-      raise ArgumentError, 'id is required'
-    end
-
-    begin
-      Integer(params[:id])
-    rescue ArgumentError, TypeError
-      raise ArgumentError, 'id must be a valid number'
-    end
   end
 end

@@ -11,6 +11,27 @@ const apiClient = axios.create({
   },
 });
 
+// Add request interceptor to include auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export const authApi = {
+  login: async (userId: number, signal?: AbortSignal): Promise<{ token: string; user: User }> => {
+    const response = await apiClient.post('/auth/login', { user_id: userId }, { signal });
+    return response.data;
+  },
+};
+
 export const userApi = {
   getAll: async (signal?: AbortSignal): Promise<User[]> => {
     const response = await apiClient.get('/users', { signal });
@@ -40,9 +61,8 @@ export const rewardsApi = {
 };
 
 export const redemptionsApi = {
-  create: async (userId: number, rewardId: number, signal?: AbortSignal): Promise<RedemptionResponse> => {
+  create: async (rewardId: number, signal?: AbortSignal): Promise<RedemptionResponse> => {
     const response = await apiClient.post('/redemptions', {
-      user_id: userId,
       reward_id: rewardId,
     }, { signal });
     return response.data;

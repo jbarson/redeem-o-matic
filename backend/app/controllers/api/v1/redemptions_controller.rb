@@ -11,7 +11,8 @@ class Api::V1::RedemptionsController < ApplicationController
     ActiveRecord::Base.transaction do
       # Lock records for update to prevent race conditions
       # This acquires FOR UPDATE locks in the database
-      user = User.lock.find(params[:user_id])
+      # Use current_user instead of params to ensure users can only redeem for themselves
+      user = User.lock.find(current_user.id)
       reward = Reward.lock.find(params[:reward_id])
 
       # Validate reward is active (inside transaction after lock)
@@ -74,21 +75,11 @@ class Api::V1::RedemptionsController < ApplicationController
 
   def validate_redemption_params!
     # Check presence of required parameters
-    if params[:user_id].blank?
-      raise ArgumentError, 'user_id is required'
-    end
-
     if params[:reward_id].blank?
       raise ArgumentError, 'reward_id is required'
     end
 
-    # Validate that parameters are numeric
-    begin
-      Integer(params[:user_id])
-    rescue ArgumentError, TypeError
-      raise ArgumentError, 'user_id must be a valid number'
-    end
-
+    # Validate that reward_id is numeric
     begin
       Integer(params[:reward_id])
     rescue ArgumentError, TypeError

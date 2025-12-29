@@ -1,11 +1,11 @@
 import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
 import { User } from '../types';
-import { userApi } from '../services/api';
+import { userApi, authApi } from '../services/api';
 import { logger } from '../services/logger';
 
 interface UserContextType {
   user: User | null;
-  login: (user: User) => void;
+  login: (userId: number) => Promise<void>;
   logout: () => void;
   refreshBalance: () => Promise<void>;
 }
@@ -15,17 +15,30 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    const storedToken = localStorage.getItem('auth_token');
+    // Only restore user if token exists
+    if (storedUser && storedToken) {
+      return JSON.parse(storedUser);
+    }
+    return null;
   });
 
-  const login = useCallback((newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
+  const login = useCallback(async (userId: number) => {
+    try {
+      const { token, user: loggedInUser } = await authApi.login(userId);
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      setUser(loggedInUser);
+    } catch (error: unknown) {
+      logger.apiError('/auth/login', error, { userId });
+      throw error;
+    }
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
   }, []);
 
   const refreshBalance = useCallback(async () => {

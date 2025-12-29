@@ -51,13 +51,22 @@ const LoginPage: React.FC = () => {
     };
   }, []);
 
-  const handleUserSelect = (user: User) => {
-    logger.userAction('User Login', {
-      userId: user.id,
-      userName: user.name,
-    });
-    login(user);
-    navigate('/');
+  const handleUserSelect = async (user: User) => {
+    try {
+      logger.userAction('User Login Attempt', {
+        userId: user.id,
+        userName: user.name,
+      });
+      await login(user.id);
+      logger.userAction('User Login Success', {
+        userId: user.id,
+        userName: user.name,
+      });
+      navigate('/');
+    } catch (err: unknown) {
+      setError('Failed to login. Please try again.');
+      logger.apiError('/auth/login', err, { userId: user.id });
+    }
   };
 
   if (loading) {
