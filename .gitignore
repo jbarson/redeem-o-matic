@@ -5,6 +5,7 @@ backend/db/*.sqlite3
 backend/db/*.sqlite3-*
 backend/storage/*
 backend/.bundle
+backend.log
 
 # Frontend (React)
 frontend/node_modules/
@@ -16,6 +17,7 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+frontend.log
 
 # OS Files
 .DS_Store
