@@ -1,0 +1,91 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-container {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.login-container h1 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 32px;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-card:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.user-info h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.user-email {
+  color: #666;
+  font-size: 14px;
+}
+
+.user-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #667eea;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+.points {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.points-label {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.error-message {
+  color: #d32f2f;
+  text-align: center;
+}
