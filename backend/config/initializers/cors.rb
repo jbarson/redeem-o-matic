@@ -14,6 +14,11 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     resource "*",
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head],
-      credentials: true
+      # credentials: true is now appropriate since we have JWT authentication
+      # This allows cookies/credentials to be sent with cross-origin requests
+      # which is needed for proper authentication flow
+      credentials: true,
+      # Expose Authorization header to frontend
+      expose: ['Authorization']
   end
 end
