@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
-import { User } from '../types';
+import { User, getErrorMessage } from '../types';
 import { logger } from '../services/logger';
 import '../styles/LoginPage.css';
 
@@ -67,7 +67,7 @@ const LoginPage: React.FC = () => {
       });
       navigate('/');
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to login. Please try again.';
+      const errorMessage = getErrorMessage(err, 'Failed to login. Please try again.');
       setError(errorMessage);
       logger.apiError('/auth/login', err, { userId: user.id });
     }
