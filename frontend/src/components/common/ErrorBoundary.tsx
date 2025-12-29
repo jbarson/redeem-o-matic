@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { logger } from '../../services/logger';
 import '../../styles/ErrorBoundary.css';
 
 interface Props {
@@ -27,12 +28,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error details to console in development
-    console.error('Error Boundary caught an error:', error);
-    console.error('Error Info:', errorInfo);
-
-    // In production, you would send this to an error reporting service
-    // Example: Sentry.captureException(error, { extra: errorInfo });
+    // Log error using logger service
+    logger.error('Error Boundary caught an error', error, {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true,
+    });
 
     this.setState({
       error,
