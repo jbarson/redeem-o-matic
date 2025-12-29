@@ -25,8 +25,16 @@ class Api::V1::UsersController < ApplicationController
 
   # GET /api/v1/users/:id/redemptions
   def redemptions
+    # Ensure current_user is set (should be set by authenticate_user! but check anyway)
+    unless current_user
+      render json: { error: 'Unauthorized' }, status: :unauthorized
+      return
+    end
+
     # Users can only access their own redemptions
-    unless current_user.id == params[:id].to_i
+    # Convert both to integers for reliable comparison
+    requested_user_id = params[:id].to_i
+    unless current_user.id == requested_user_id
       render json: { error: 'Forbidden - You can only access your own data' }, status: :forbidden
       return
     end
@@ -47,5 +55,9 @@ class Api::V1::UsersController < ApplicationController
       total_count: current_user.redemptions.count,
       current_balance: current_user.points_balance
     }
+  rescue => e
+    Rails.logger.error("Error fetching redemptions: #{e.message}")
+    Rails.logger.error(e.backtrace.join("\n"))
+    render json: { error: 'An error occurred while fetching redemption history' }, status: :internal_server_error
   end
 end
