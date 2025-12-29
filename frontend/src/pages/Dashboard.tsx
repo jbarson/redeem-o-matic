@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
+import { logger } from '../services/logger';
 import PointsBalance from '../components/user/PointsBalance';
 import '../styles/Dashboard.css';
 
@@ -11,20 +12,34 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchStats = async () => {
       if (user) {
         try {
           const history = await userApi.getRedemptions(user.id, { limit: 1 });
-          setTotalRedemptions(history.total_count);
-        } catch (error) {
-          console.error('Failed to fetch stats:', error);
+          if (isMounted) {
+            setTotalRedemptions(history.total_count);
+          }
+        } catch (error: unknown) {
+          if (isMounted) {
+            logger.apiError(`/users/${user.id}/redemptions`, error);
+          }
         } finally {
-          setLoading(false);
+          if (isMounted) {
+            setLoading(false);
+          }
         }
       }
     };
 
     fetchStats();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [user]);
 
   return (

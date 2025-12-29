@@ -14,21 +14,35 @@ const HistoryPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchHistory = async () => {
       if (user) {
         try {
           const history = await userApi.getRedemptions(user.id);
-          setRedemptions(history.redemptions);
+          if (isMounted) {
+            setRedemptions(history.redemptions);
+          }
         } catch (err: unknown) {
-          setError('Failed to load redemption history. Please try again.');
-          logger.apiError(`/users/${user.id}/redemptions`, err);
+          if (isMounted) {
+            setError('Failed to load redemption history. Please try again.');
+            logger.apiError(`/users/${user.id}/redemptions`, err);
+          }
         } finally {
-          setLoading(false);
+          if (isMounted) {
+            setLoading(false);
+          }
         }
       }
     };
 
     fetchHistory();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [user]);
 
   if (loading) {

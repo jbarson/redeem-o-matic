@@ -14,19 +14,33 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchUsers = async () => {
       try {
         const fetchedUsers = await userApi.getAll();
-        setUsers(fetchedUsers);
+        if (isMounted) {
+          setUsers(fetchedUsers);
+        }
       } catch (err: unknown) {
-        setError('Failed to load users. Please try again.');
-        logger.apiError('/users', err);
+        if (isMounted) {
+          setError('Failed to load users. Please try again.');
+          logger.apiError('/users', err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchUsers();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
   const handleUserSelect = (user: User) => {

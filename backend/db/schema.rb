@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_29_160613) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_29_173317) do
   create_table "redemptions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "reward_id", null: false
@@ -20,6 +20,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_29_160613) do
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_redemptions_on_created_at"
     t.index ["reward_id"], name: "index_redemptions_on_reward_id"
+    t.index ["user_id", "created_at"], name: "index_redemptions_on_user_and_date"
     t.index ["user_id"], name: "index_redemptions_on_user_id"
   end
 
@@ -33,6 +34,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_29_160613) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_rewards_on_active"
   end
 
   create_table "users", force: :cascade do |t|

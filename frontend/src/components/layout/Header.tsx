@@ -31,8 +31,8 @@ const Header: React.FC = () => {
 
         <div className="user-section">
           <div className="user-info">
-            <span className="user-name">{user.name}</span>
-            <span className="user-points">{user.points_balance} pts</span>
+            <span className="user-name">{user?.name}</span>
+            <span className="user-points">{user?.points_balance} pts</span>
           </div>
           <button onClick={handleLogout} className="logout-button">
             Logout

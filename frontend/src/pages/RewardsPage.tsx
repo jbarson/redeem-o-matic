@@ -17,20 +17,34 @@ const RewardsPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchRewards = async () => {
       try {
         const fetchedRewards = await rewardsApi.getAll();
-        setRewards(fetchedRewards);
+        if (isMounted) {
+          setRewards(fetchedRewards);
+        }
       } catch (err: unknown) {
-        const errorMessage = getErrorMessage(err, 'Failed to load rewards. Please try again.');
-        setError(errorMessage);
-        logger.apiError('/rewards', err);
+        if (isMounted) {
+          const errorMessage = getErrorMessage(err, 'Failed to load rewards. Please try again.');
+          setError(errorMessage);
+          logger.apiError('/rewards', err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchRewards();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
   const handleRedeemClick = (reward: Reward) => {
