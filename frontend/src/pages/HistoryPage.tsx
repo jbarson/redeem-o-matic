@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { userApi } from '../services/api';
-import { Redemption } from '../types';
+import { Redemption, getErrorMessage } from '../types';
 import { logger } from '../services/logger';
 import RedemptionHistory from '../components/redemptions/RedemptionHistory';
 import PointsBalance from '../components/user/PointsBalance';
@@ -34,7 +34,8 @@ const HistoryPage: React.FC = () => {
             return;
           }
           if (isMounted) {
-            setError('Failed to load redemption history. Please try again.');
+            const errorMessage = getErrorMessage(err, 'Failed to load redemption history. Please try again.');
+            setError(errorMessage);
             logger.apiError(`/users/${user.id}/redemptions`, err);
           }
         } finally {
