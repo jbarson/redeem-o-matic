@@ -28,31 +28,37 @@ const RedemptionHistory: React.FC<RedemptionHistoryProps> = ({ redemptions }) =>
 
   return (
     <div className="redemption-history">
-      {redemptions.map((redemption) => (
-        <div key={redemption.id} className="redemption-item">
-          <div className="redemption-image">
-            {redemption.reward.image_url ? (
-              <img src={redemption.reward.image_url} alt={redemption.reward.name} />
-            ) : (
-              <div className="image-placeholder">Reward</div>
-            )}
-          </div>
+      {redemptions.map((redemption) => {
+        const placeholderImage = `https://placehold.co/300x200/2d6a4f/ffffff/png?text=${encodeURIComponent(redemption.reward.category)}`;
 
-          <div className="redemption-details">
-            <h3 className="redemption-name">{redemption.reward.name}</h3>
-            <p className="redemption-date">{formatDate(redemption.created_at)}</p>
-          </div>
+        return (
+          <div key={redemption.id} className="redemption-item">
+            <div className="redemption-image">
+              <img
+                src={redemption.reward.image_url || placeholderImage}
+                alt={redemption.reward.name}
+                onError={(e) => {
+                  e.currentTarget.src = placeholderImage;
+                }}
+              />
+            </div>
 
-          <div className="redemption-cost">
-            <span className="cost-amount">-{redemption.points_spent}</span>
-            <span className="cost-label">points</span>
-          </div>
+            <div className="redemption-details">
+              <h3 className="redemption-name">{redemption.reward.name}</h3>
+              <p className="redemption-date">{formatDate(redemption.created_at)}</p>
+            </div>
 
-          <div className={`redemption-status status-${redemption.status}`}>
-            {redemption.status}
+            <div className="redemption-cost">
+              <span className="cost-amount">-{redemption.points_spent}</span>
+              <span className="cost-label">points</span>
+            </div>
+
+            <div className={`redemption-status status-${redemption.status}`}>
+              {redemption.status}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
